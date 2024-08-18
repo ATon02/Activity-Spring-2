@@ -12,4 +12,7 @@ public interface TaskService {
     DTOTask update(String id, Task task);
     void delete(String id);
     List<DTOTask> fetchAll();
+    List<DTOTask> fetchByUser(String email);
+    DTOTask createByUser(Task task,long userId);
+    DTOTask updateByUser(String id,Task task,long userId);
 }

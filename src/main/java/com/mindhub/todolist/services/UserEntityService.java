@@ -11,4 +11,6 @@ public interface UserEntityService {
     DTOUserEntity update(String id, UserEntity userEntity);
     void delete(String id);
     List<DTOUserEntity> fetchAll();
+    DTOUserEntity fetchByEmail(String email);
+    DTOUserEntity updateSelf(long id, UserEntity userEntity); 
 }

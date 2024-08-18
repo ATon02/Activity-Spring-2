@@ -6,6 +6,7 @@ import java.util.List;
 import com.mindhub.todolist.exceptions.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import com.mindhub.todolist.dtos.DTOUserEntity;
@@ -17,6 +18,8 @@ import com.mindhub.todolist.services.UserEntityService;
 public class UserEntityServiceImpl implements UserEntityService {
     @Autowired
     private UserEntityRepository userEntityRepository;
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
     @Override
     public DTOUserEntity create(UserEntity userEntity) {
@@ -30,6 +33,7 @@ public class UserEntityServiceImpl implements UserEntityService {
             if (!userEntity.validEmail()) {
                 throw new InvalidFormatException("The email format is not valid");
             }
+            userEntity.setPassword(passwordEncoder.encode(userEntity.getPassword()));
             UserEntity userEntitySave = userEntityRepository.save(userEntity);
             return new DTOUserEntity(userEntitySave);
         } catch (DataIntegrityViolationException dex) {
@@ -73,7 +77,7 @@ public class UserEntityServiceImpl implements UserEntityService {
                     throw new InvalidFormatException("The email format is not valid");
                 }
                 userEntityOld.setUsername(valueToSave(userEntity.getUsername(),userEntityOld.getUsername()));
-                userEntityOld.setPassword(valueToSave(userEntity.getPassword(),userEntityOld.getPassword()));
+                userEntityOld.setPassword(passwordEncoder.encode(valueToSave(userEntity.getPassword(),userEntityOld.getPassword())));
                 if (userEntity.getEmail() != null && !userEntity.getEmail().equals(userEntityOld.getEmail())) {
                     if(userEntityRepository.existsByEmail(userEntity.getEmail())){
                         throw new DataIntegrityViolationException("Bad request: Email is duplicated");
@@ -129,5 +133,54 @@ public class UserEntityServiceImpl implements UserEntityService {
     // Method return the value to save, comparing the new and old value
     private String valueToSave(String newValue, String oldValue){
         return (newValue != null && !newValue.equals(oldValue)) ? newValue : oldValue;
+    }
+
+    @Override
+    public DTOUserEntity fetchByEmail(String email) {
+        try {
+            UserEntity UserEntityFetch = userEntityRepository.findByEmail(email).orElseThrow(()->new NotFoundException("Not Found UserEntity With Email: " + email));
+            return new DTOUserEntity(UserEntityFetch);
+        } catch (Exception ex) {
+            throw new NumberFormatException("Bad request: Unsuccessful fetch");
+        }
+    }
+
+    @Override
+    public DTOUserEntity updateSelf(long id, UserEntity userEntity) {
+        try {
+            long userEntityId = Long.parseLong(String.valueOf(id));
+            if (userEntityId > 0) {
+                UserEntity userEntityOld = userEntityRepository.findById(userEntityId).orElseThrow(() -> new NotFoundException("Not Found UserEntity With Id: " + id));
+                if (userEntityOld.equals(userEntity)) {
+                    throw new NotUpdateException("No Fields Were Updated For UserEntity With Id: " + id);
+                }
+                if (!userEntity.validObject()) {
+                    throw new InvalidObject("Check data contain empty fields");
+                }
+                if (!userEntity.validEmail()) {
+                    throw new InvalidFormatException("The email format is not valid");
+                }
+                userEntityOld.setUsername(valueToSave(userEntity.getUsername(),userEntityOld.getUsername()));
+                userEntityOld.setPassword(passwordEncoder.encode(valueToSave(userEntity.getPassword(),userEntityOld.getPassword())));
+                if (userEntity.getEmail() != null && !userEntity.getEmail().equals(userEntityOld.getEmail())) {
+                    if(userEntityRepository.existsByEmail(userEntity.getEmail())){
+                        throw new DataIntegrityViolationException("Bad request: Email is duplicated");
+                    }
+                    userEntityOld.setEmail(userEntity.getEmail());
+                }
+                UserEntity userEntityUpdate = userEntityRepository.save(userEntityOld);
+                return new DTOUserEntity(userEntityUpdate);
+            } else {
+                throw new InvalidFormatException("Bad request: Invalid ID format, id is lower or equals to 0");
+            }
+        } catch (NumberFormatException ex) {
+            throw new InvalidFormatException("Bad request: Invalid ID format, id is not a number");
+        } catch (DataIntegrityViolationException ex) {
+            throw new DataIntegrityViolationException("Bad request: Email is duplicated");
+        }catch (InvalidObject ex) {
+            throw new InvalidObject("Check data contain empty fields");
+        }catch (InvalidFormatException fex){
+            throw new InvalidFormatException("The email format is not valid");
+        }
     }
 }

@@ -7,6 +7,7 @@ import com.mindhub.todolist.exceptions.NotCreateException;
 import com.mindhub.todolist.exceptions.NotFoundException;
 import com.mindhub.todolist.exceptions.NotUpdateException;
 import com.mindhub.todolist.models.Task;
+import com.mindhub.todolist.models.UserEntity;
 import com.mindhub.todolist.models.enums.TaskStatus;
 import com.mindhub.todolist.respositories.TaskRepository;
 import com.mindhub.todolist.services.TaskService;
@@ -119,5 +120,71 @@ public class TaskServiceImpl implements TaskService {
 
     private String valueToSave(String newValue, String oldValue){
         return (newValue != null && !newValue.equals(oldValue)) ? newValue : oldValue;
+    }
+
+    @Override
+    public List<DTOTask> fetchByUser(String email) {
+        try {
+            List<Task> tasks =  taskRepository.findByUser_Email(email);
+            List<DTOTask> DtosTasks = new ArrayList<>();
+            for(Task task : tasks){
+                DtosTasks.add(new DTOTask(task));
+            }
+            return DtosTasks;
+        } catch (Exception ex) {
+            throw new NumberFormatException("Not Found");
+        }
+    }
+
+    @Override
+    public DTOTask createByUser(Task task, long userId) {
+        try {
+            if (!task.validObject()) {
+                throw new InvalidObject("Check data contain empty fields");
+            }
+            task.setUser(new UserEntity(userId));
+            Task taskSave = taskRepository.save(task);
+            return new DTOTask(taskSave);
+        } catch(DataIntegrityViolationException dex){
+            throw new DataIntegrityViolationException("Bad request: User with id: " + userId + " no exist");
+        } catch (HttpMessageNotReadableException ex) {
+            throw new NotCreateException("Task Not Created");
+        }catch (InvalidObject ex) {
+            throw new InvalidObject("Check data contain empty fields");
+        }catch (Exception ex) {
+            throw new NotCreateException("Task Not Created");
+        }
+    }
+
+    @Override
+    public DTOTask updateByUser(String id,Task task, long userId) {
+        try {
+            long taskId = Long.parseLong(id);
+            if (taskId > 0) {
+                Task taskOld = taskRepository.findById(taskId).orElseThrow(() -> new NotFoundException("Not Found Task With Id: " + id));
+                if (taskOld.getUser().getId()!=userId) {
+                    throw new NotUpdateException("User no is authorized for updated this task: " + id);
+                }
+                if (taskOld.equals(task)) {
+                    throw new NotUpdateException("No Fields Were Updated For Task With Id: " + id);
+                }
+                if (!task.validObject()) {
+                    throw new InvalidObject("Check data contain empty fields");
+                }
+                taskOld.setDescription(valueToSave(task.getDescription(),taskOld.getDescription()));
+                taskOld.setStatus(TaskStatus.valueOf(valueToSave(task.getStatus().toString(),taskOld.getStatus().toString())));
+                taskOld.setTitle(valueToSave(task.getTitle(), taskOld.getTitle()));
+                Task taskUpdate = taskRepository.save(taskOld);
+                return new DTOTask(taskUpdate);
+            } else {
+                throw new InvalidFormatException("Bad request: Invalid ID format, id is lower or equals to 0");
+            }
+        } catch (NumberFormatException ex) {
+            throw new InvalidFormatException("Bad request: Invalid ID format, id is not a number");
+        } catch(DataIntegrityViolationException dex){
+            throw new DataIntegrityViolationException("Bad request: User with id: " + task.getUser().getId() + " no exist");
+        } catch (InvalidObject ex) {
+            throw new InvalidObject("Check data contain empty fields");
+        }
     }
 }

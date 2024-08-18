@@ -7,6 +7,8 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import com.mindhub.todolist.models.enums.UserRoles;
+
 import io.swagger.v3.oas.annotations.media.Schema;
 
 
@@ -26,12 +28,19 @@ public class UserEntity {
     @Schema(example = "passwordTest") 
     private String password;
     @Schema(example = "emailtest@email.com") 
+    @Column(unique = true)
     private String email;
     @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
     @Schema(hidden = true) 
     private Set<Task> tasks = new HashSet<>();
-
+    @Enumerated(EnumType.STRING)
+    private UserRoles role;
     public UserEntity() {
+    }
+
+
+    public UserEntity(long id) {
+        this.id = id;
     }
 
     public UserEntity(Set<Task> tasks, String username, String password, String email) {
@@ -41,10 +50,18 @@ public class UserEntity {
         this.email = email;
     }
 
-    public UserEntity(String username, String password, String email) {
+    public UserEntity(String username, String password, String email, UserRoles role) {
         this.username = username;
         this.password = password;
         this.email = email;
+        this.role =role;
+    }
+
+    public UserEntity(String password, String email) {
+        this.username = "This data is pending for update";
+        this.password = password;
+        this.email = email;
+        this.role =UserRoles.USER;
     }
 
     public long getId() {
@@ -88,6 +105,13 @@ public class UserEntity {
         this.tasks.add(task);
     }
 
+    public UserRoles getRole() {
+        return role;
+    }
+
+    public void setRole(UserRoles role) {
+        this.role = role;
+    }
 
     @Override
     public boolean equals(Object obj) {

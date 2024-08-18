@@ -1,4 +1,4 @@
-package com.mindhub.todolist.controllers;
+package com.mindhub.todolist.controllers.admin;
 
 import com.mindhub.todolist.dtos.DTOTask;
 import com.mindhub.todolist.models.Task;
@@ -19,8 +19,8 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/tasks")
-public class TaskController {
+@RequestMapping("/api/admin/tasks")
+public class AdminTaskController {
 
     @Autowired
     private TaskService taskService;
@@ -30,6 +30,8 @@ public class TaskController {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "Task saved correctly"),
             @ApiResponse(responseCode = "400", description = "Bad request: Task Not Created or Bad request: User with id no exist", content = @Content(mediaType = "text/plain", schema = @Schema(type = "string"))),
+            @ApiResponse(responseCode = "403", description = "Not authorized for this request", content = @Content(mediaType = "text/plain", schema = @Schema(type = "string"))),
+            @ApiResponse(responseCode = "401", description = "Invalid Token", content = @Content(mediaType = "text/plain", schema = @Schema(type = "string")))
     })
     public ResponseEntity<DTOTask> createTask(
             @RequestBody @Schema(description = "The data task to save", implementation = Task.class) Task task) {
@@ -41,6 +43,8 @@ public class TaskController {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Task data found."),
             @ApiResponse(responseCode = "400", description = "Bad request: Invalid ID format, id is lower or equals to 0 or Invalid ID format, id is not a number or Bad info or Not Found Task With Id", content = @Content(mediaType = "text/plain", schema = @Schema(type = "string"))),
+            @ApiResponse(responseCode = "403", description = "Not authorized for this request", content = @Content(mediaType = "text/plain", schema = @Schema(type = "string"))),
+            @ApiResponse(responseCode = "401", description = "Invalid Token", content = @Content(mediaType = "text/plain", schema = @Schema(type = "string")))
     })
     public ResponseEntity<DTOTask> fetchTask(
             @PathVariable @Parameter(description = "Id to search, this id only accept numbers") String id) {
@@ -52,6 +56,8 @@ public class TaskController {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "Task updated correctly"),
             @ApiResponse(responseCode = "400", description = "Bad request: No Fields Were Updated For Task With Id or Invalid ID format, id is lower or equals to 0 or Invalid ID format, id is not a number or User with id no exist or Not Found Task With Id", content = @Content(mediaType = "text/plain", schema = @Schema(type = "string"))),
+            @ApiResponse(responseCode = "403", description = "Not authorized for this request", content = @Content(mediaType = "text/plain", schema = @Schema(type = "string"))),
+            @ApiResponse(responseCode = "401", description = "Invalid Token", content = @Content(mediaType = "text/plain", schema = @Schema(type = "string")))
     })
     public ResponseEntity<DTOTask> updateTask(
             @PathVariable @Parameter(description = "Id to update, this id only accept numbers") String id,
@@ -65,6 +71,8 @@ public class TaskController {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "204", description = "Task delete."),
             @ApiResponse(responseCode = "400", description = "Bad request: Invalid ID format, id is not a number or Invalid ID format, id is lower or equals to 0", content = @Content(mediaType = "text/plain", schema = @Schema(type = "string"))),
+            @ApiResponse(responseCode = "403", description = "Not authorized for this request", content = @Content(mediaType = "text/plain", schema = @Schema(type = "string"))),
+            @ApiResponse(responseCode = "401", description = "Invalid Token", content = @Content(mediaType = "text/plain", schema = @Schema(type = "string")))
     })
     public ResponseEntity<String> deleteTask(
             @PathVariable @Parameter(description = "Id to delete, this id only accept numbers") String id) {
@@ -76,7 +84,9 @@ public class TaskController {
     @Operation(summary = "Get All Tasks", description = "Return all tasks of system.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Tasks data found."),
-            @ApiResponse(responseCode = "400", description = "Bad request: Not Found"),
+            @ApiResponse(responseCode = "400", description = "Bad request: Not Found",content = @Content(mediaType = "text/plain", schema = @Schema(type = "string"))),
+            @ApiResponse(responseCode = "403", description = "Not authorized for this request", content = @Content(mediaType = "text/plain", schema = @Schema(type = "string"))),
+            @ApiResponse(responseCode = "401", description = "Invalid Token", content = @Content(mediaType = "text/plain", schema = @Schema(type = "string")))
     })
     public ResponseEntity<List<DTOTask>> getAll() {
         return ResponseEntity.ok(this.taskService.fetchAll());

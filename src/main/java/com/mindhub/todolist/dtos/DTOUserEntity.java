@@ -1,17 +1,20 @@
 package com.mindhub.todolist.dtos;
 
 import com.mindhub.todolist.models.UserEntity;
+import com.mindhub.todolist.models.enums.UserRoles;
 
 public class DTOUserEntity {
 
     private long id;
     private String username;
     private String email;
+    private UserRoles role; 
 
     public DTOUserEntity(UserEntity user) {
         this.id = user.getId();
         this.username = user.getUsername();
         this.email = user.getEmail();
+        this.role = user.getRole();
     }
 
     public long getId() {
@@ -25,4 +28,9 @@ public class DTOUserEntity {
     public String getEmail() {
         return email;
     }
+
+    public UserRoles getRole() {
+        return role;
+    }
+    
 }
