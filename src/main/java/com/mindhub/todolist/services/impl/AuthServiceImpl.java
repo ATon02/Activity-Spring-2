@@ -51,13 +51,13 @@ public class AuthServiceImpl implements AuthService {
             if (!loginRequest.validObject()) {
                 throw new InvalidObject("Check data contain empty fields");
             }
-            UserEntity user = new UserEntity(loginRequest.password(),loginRequest.email());
-            if (userEntityRepository.existsByEmail(user.getEmail())) {
+            if (userEntityRepository.existsByEmail(loginRequest.email())) {
                 throw new DataIntegrityViolationException("Bad request: Email is duplicated");
             }
-            if (!user.validEmail()) {
+            if (!loginRequest.validEmail()) {
                 throw new InvalidFormatException("The email format is not valid");
             }
+            UserEntity user = new UserEntity(loginRequest.password(),loginRequest.email());
             user.setPassword(passwordEncoder.encode(user.getPassword()));
             UserEntity userEntitySave = userEntityRepository.save(user);
             if(userEntitySave!=null){
