@@ -17,6 +17,13 @@ public class DTOUserEntity {
         this.role = user.getRole();
     }
 
+    public DTOUserEntity(long id, String username, String email, UserRoles role) {
+        this.id = id;
+        this.username = username;
+        this.email = email;
+        this.role = role;
+    }
+
     public long getId() {
         return id;
     }

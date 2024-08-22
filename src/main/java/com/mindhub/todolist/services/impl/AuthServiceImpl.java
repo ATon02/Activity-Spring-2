@@ -59,12 +59,8 @@ public class AuthServiceImpl implements AuthService {
             }
             UserEntity user = new UserEntity(loginRequest.password(),loginRequest.email());
             user.setPassword(passwordEncoder.encode(user.getPassword()));
-            UserEntity userEntitySave = userEntityRepository.save(user);
-            if(userEntitySave!=null){
-                return this.login(loginRequest);
-            }else{
-                throw new NotCreateException("Bad request: UserEntity Not Created");
-            }
+            userEntityRepository.save(user);
+            return this.login(loginRequest);
         } catch (DataIntegrityViolationException dex) {
             throw new DataIntegrityViolationException("Bad request: Email is duplicated");
         } catch (InvalidObject iex) {

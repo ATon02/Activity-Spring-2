@@ -10,10 +10,16 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.annotation.web.configurers.HeadersConfigurer;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+
+import io.jsonwebtoken.lang.Arrays;
 
 
 @Configuration
@@ -50,7 +56,9 @@ public class SecurityConfig {
                 authorizeRequests
                     .requestMatchers(PUBLIC_MATCHERS).permitAll() // Acceso público a rutas permitidas
                     .requestMatchers(HttpMethod.DELETE, ADMIN_MATCHERS).hasAuthority("ADMIN")
-                    .requestMatchers(ADMIN_MATCHERS).hasAnyAuthority("ADMIN", "COORDINATOR")
+                    .requestMatchers(HttpMethod.GET,ADMIN_MATCHERS).hasAnyAuthority("ADMIN", "COORDINATOR")
+                    .requestMatchers(HttpMethod.PUT,ADMIN_MATCHERS).hasAnyAuthority("ADMIN", "COORDINATOR")
+                    .requestMatchers(HttpMethod.POST,ADMIN_MATCHERS).hasAnyAuthority("ADMIN", "COORDINATOR")
                     .anyRequest().authenticated() // Autenticación requerida para el resto
             )
             .headers(headers -> headers
@@ -58,8 +66,9 @@ public class SecurityConfig {
             )
             .formLogin(AbstractHttpConfigurer::disable)
             .httpBasic(AbstractHttpConfigurer::disable)
+            .sessionManagement(sessionManagement ->
+                        sessionManagement.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
-
         return http.build();
     }
 
@@ -68,4 +77,16 @@ public class SecurityConfig {
     public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration) throws Exception {
         return authenticationConfiguration.getAuthenticationManager();
     }
+
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration configuration = new CorsConfiguration();
+        configuration.setAllowedOrigins(Arrays.asList(new String[]{"*"}));
+        configuration.setAllowedMethods(Arrays.asList(new String[]{"GET", "POST", "PUT", "DELETE"}));
+        configuration.setAllowedHeaders(Arrays.asList(new String[]{"Authorization", "Content-Type"}));
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", configuration);
+        return source;
+    }
+
 }

@@ -17,6 +17,13 @@ public class DTOTask {
         this.status = task.getStatus();
     }
 
+    public DTOTask(long id, String title, String description, TaskStatus status) {
+        this.id = id;
+        this.title = title;
+        this.description = description;
+        this.status = status;
+    }
+
     public long getId() {
         return id;
     }
