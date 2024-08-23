@@ -34,7 +34,7 @@ public class AdminUserControllerTest {
 
 
     @Test
-    public void fetchTaskSuccess() throws Exception {
+    public void fetchUserSuccess() throws Exception {
         DTOUserEntity dtoUserEntity = new DTOUserEntity(1, "User 1", "demo@demo.com", UserRoles.ADMIN);
         when(userEntityService.fetch("1")).thenReturn(dtoUserEntity);
         mockMvc.perform(get("/api/admin/users/1")
@@ -47,7 +47,7 @@ public class AdminUserControllerTest {
     }
 
     @Test
-    public void fetchTaskNotFound() throws Exception {
+    public void fetchUserNotFound() throws Exception {
         when(userEntityService.fetch("2")).thenThrow(new NotFoundException("Not Found User With Id: 2"));
         mockMvc.perform(get("/api/admin/users/2")
                         .contentType(MediaType.APPLICATION_JSON))
